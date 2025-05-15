@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ready Player Me Avatar Viewer</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #app { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="module">
+    import * as THREE from 'https://cdn.skypack.dev/three@0.150.1';
+    import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.150.1/examples/jsm/loaders/GLTFLoader.js';
+    import { FBXLoader } from 'https://cdn.skypack.dev/three@0.150.1/examples/jsm/loaders/FBXLoader.js';
+
+    let scene, camera, renderer, mixer;
+
+    function setupScene() {
+      scene = new THREE.Scene();
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+      scene.add(ambientLight);
+
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+      camera.position.set(0, 1, 4);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.getElementById('app').appendChild(renderer.domElement);
+    }
+
+    async function loadAvatar(glbUrl) {
+      const gltfLoader = new GLTFLoader();
+      const fbxLoader = new FBXLoader();
+
+      try {
+        const gltf = await gltfLoader.loadAsync(glbUrl);
+        const avatar = gltf.scene;
+        scene.add(avatar);
+
+        const fbx = await fbxLoader.loadAsync('./rpm_anim.fbx');
+        mixer = new THREE.AnimationMixer(avatar.children[0]);
+        const clip = fbx.animations[0];
+
+        // Fix position scale
+        clip.tracks.forEach((track) => {
+          if (track.name.includes("position")) {
+            track.values.forEach((v, i) => {
+              track.values[i] = v / 100;
+            });
+          }
+        });
+
+        mixer.clipAction(clip).play();
+      } catch (err) {
+        console.error('Error loading avatar or animation:', err);
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (mixer) mixer.update(0.01);
+      renderer.render(scene, camera);
+    }
+
+    setupScene();
+    animate();
+
+    // Expose function to Flutter
+    window.loadAvatar = loadAvatar;
+  </script>
+</body>
+</html>
