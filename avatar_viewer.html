@@ -41,7 +41,7 @@
         const avatar = gltf.scene;
         scene.add(avatar);
 
-        const fbx = await fbxLoader.loadAsync('./rpm_anim.fbx');
+        const fbx = await fbxLoader.loadAsync('./F_Standing_Idle_Variations_003.fbx');
         mixer = new THREE.AnimationMixer(avatar.children[0]);
         const clip = fbx.animations[0];
 
