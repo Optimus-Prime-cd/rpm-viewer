@@ -37,7 +37,7 @@
       const fbxLoader = new FBXLoader();
 
       try {
-        const gltf = await gltfLoader.loadAsync(glbUrl);
+        const gltf = await gltfLoader.loadAsync("https://models.readyplayer.me/6825f2a64ce5f2a7a84b5c8b.glb");
         const avatar = gltf.scene;
         scene.add(avatar);
 
