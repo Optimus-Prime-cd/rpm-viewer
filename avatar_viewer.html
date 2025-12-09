@@ -2,19 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ready Player Me Avatar Viewer</title>
   <style>
-    body { margin: 0; overflow: hidden; }
+    body { margin: 0; overflow: hidden; background: #000; }
     #app { width: 100vw; height: 100vh; }
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-family: Arial, sans-serif;
+    }
   </style>
 </head>
 <body>
+  <div id="loading">Loading Avatar...</div>
   <div id="app"></div>
 
   <script type="module">
     import * as THREE from 'https://cdn.skypack.dev/three@0.150.1';
     import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.150.1/examples/jsm/loaders/GLTFLoader.js';
     import { FBXLoader } from 'https://cdn.skypack.dev/three@0.150.1/examples/jsm/loaders/FBXLoader.js';
+
+    // Get URL parameter for model
+    const urlParams = new URLSearchParams(window.location.search);
+    const modelUrl = urlParams.get('modelUrl') || 'https://models.readyplayer.me/6825f2a64ce5f2a7a84b5c8b.glb';
 
     const getSize = () => ({
       width: window.innerWidth,
@@ -38,19 +52,23 @@
 
     let mixer;
 
+    console.log('Loading model from:', modelUrl);
+
     gltfLoader.load(
-      'https://models.readyplayer.me/6825f2a64ce5f2a7a84b5c8b.glb',
+      modelUrl,
       function (gltf) {
         const avatar = gltf.scene;
         scene.add(avatar);
+        
+        document.getElementById('loading').style.display = 'none';
 
+        // Animation is hosted on GitHub - no change needed
         fbxLoader.load(
           './F_Standing_Idle_Variations_003.fbx',
           function (fbx) {
             mixer = new THREE.AnimationMixer(avatar.children[0]);
             const clip = fbx.animations[0];
 
-            // Fix position scale
             clip.tracks.forEach((track) => {
               if (track.name.includes("position")) {
                 track.values.forEach((v, i) => {
@@ -70,6 +88,7 @@
       undefined,
       function (error) {
         console.error('GLB Load Error:', error);
+        document.getElementById('loading').textContent = 'Error loading avatar';
       }
     );
 
@@ -82,6 +101,13 @@
     animate();
 
     document.getElementById('app').appendChild(renderer.domElement);
+
+    window.addEventListener('resize', () => {
+      const { width, height } = getSize();
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    });
   </script>
 </body>
 </html>
